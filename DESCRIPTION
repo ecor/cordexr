@@ -1,0 +1,14 @@
+Package: cordexr
+Type: Package
+Title: Handling CORDEX results
+Version: 0.1.0
+Author: Emanuele Cordano
+Maintainer: Emanuele Cordano <emanuele.cordano@gmail.com>
+Description: Functions and tool to handle CORDEX output files
+License: MIT
+Depends: ncdf4,sf,reshape2,dplyr,purrr,stringr,lubridate
+Imports:magrittr,rlang
+Suggests: RMAWGEN
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
