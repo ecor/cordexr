@@ -5,7 +5,8 @@ NULL
 #' @param crop_sf spatial feature containing the points and on which the netcdf data has been cropped
 #' @param point_id_name point id names in \code{crop_sf}.
 #' @param names_xy  names for x and y columns for the function value. Default is \code{c("x","y")}.
-#' @param ... further arguments to be implented
+#' @param type option. Default is \code{c("grid","point")[1]} (only first element, \code{"grid"} is considered). See function internal code for details.
+#' @param ... further arguments to be implemented
 
 
 #' @seealso \code{\link{cordex_grid_cell_values}},\code{\link{cordex_grid_vertices}}
@@ -28,23 +29,41 @@ NULL
 #' data(trentino)
 #' stations <- cbind(as.data.frame(STATION_LATLON),STATION_NAMES) %>% st_as_sf(coords=c(1,2),crs=4326)
 #'
-#' out <- cordex_grid_cell_value_from_points(nc,crop_sf=stations)
+#' cc <- system.time(out <- cordex_grid_cell_value_from_points(nc,crop_sf=stations))
+#'
+#' ccp <- system.time(outp <- cordex_grid_cell_value_from_points(nc,crop_sf=stations,type="point"))
 #'
 #'
 #'
 #'
 #'
-#'
-cordex_grid_cell_value_from_points <- function(nc,crop_sf,point_id_name=c("STATION_NAMES"),names_xy=c("x","y"),...) {
+cordex_grid_cell_value_from_points <- function(nc,crop_sf,point_id_name=c("STATION_NAMES"),names_xy=c("x","y"),type=c("grid","point"),...) {
 
 
+  type <- type[1]
+  if (type=="grid") {
+    rlatlon0 <- cordex_grid_vertices(nc,crop_sf=crop_sf,...)
+    rlatlon00 <<- rlatlon0
+    station_cell0 <- st_within(crop_sf,rlatlon0,sparse=TRUE) %>% sapply(function(x){x[1]}) ## see buffer
+    crop_sf$nccell <- station_cell0
+    out20 <- as.data.frame(rlatlon0[station_cell0,]) %>% dplyr::select(-.data$geometry) %>% cbind(crop_sf) %>% st_as_sf()
+  } else if (type=="point") {
+    rlatlon0 <- cordex_grid_points(nc,return_sf=FALSE)
+    crop_sf0 <- st_coordinates(crop_sf)
+    station_cell0 <- list()
+    for (i in 1:nrow(crop_sf0)) {
 
-  rlatlon0 <- cordex_grid_vertices(nc,crop_sf=crop_sf,...)
-  station_cell0 <- st_within(crop_sf,rlatlon0,sparse=TRUE) %>% sapply(function(x){x[1]}) ## see buffer
-  crop_sf$nccell <- station_cell0
-  out20 <- as.data.frame(rlatlon0[station_cell0,]) %>% dplyr::select(-.data$geometry) %>% cbind(crop_sf) %>% st_as_sf()
+      station_cell0[[i]] <- which.min(((rlatlon0$lon-crop_sf0[i,1])^2+(rlatlon0$lat-crop_sf0[i,2])^2)^0.5)[1]
+    }
+    station_cell0 <- unlist(station_cell0)
+    crop_sf$ncell <- station_cell0
+    ## METTERE A POSTO QUI !!!
+
+    out20 <<- as.data.frame(rlatlon0[station_cell0,]) %>% cbind(crop_sf) ##%>% st_as_sf()
+
+  }
   out30 <- cordex_grid_cell_values(nc,rlon=rlatlon0[[1]],rlat=rlatlon0[[2]])
- ## unit <- attr(out3,"variable_attributes")   #units
+  ## unit <- attr(out3,"variable_attributes")   #units
   nn20 <- names(out20)[1:2]
   names(out20)[1:2] <- c("x","y")
   names(out30)[1:2] <- c("x","y")

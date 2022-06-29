@@ -9,6 +9,7 @@ cordex_grid_cell_value_from_points(
   crop_sf,
   point_id_name = c("STATION_NAMES"),
   names_xy = c("x", "y"),
+  type = c("grid", "point"),
   ...
 )
 }
@@ -21,7 +22,9 @@ cordex_grid_cell_value_from_points(
 
 \item{names_xy}{names for x and y columns for the function value. Default is \code{c("x","y")}.}
 
-\item{...}{further arguments to be implented}
+\item{type}{option. Default is \code{c("grid","point")[1]} (only first element, \code{"grid"} is considered). See function internal code for details.}
+
+\item{...}{further arguments to be implemented}
 }
 \description{
 Extraction of CORDEX grid  values from points
@@ -37,8 +40,9 @@ library(RMAWGEN)
 data(trentino)
 stations <- cbind(as.data.frame(STATION_LATLON),STATION_NAMES) \%>\% st_as_sf(coords=c(1,2),crs=4326)
 
-out <- cordex_grid_cell_value_from_points(nc,crop_sf=stations)
+cc <- system.time(out <- cordex_grid_cell_value_from_points(nc,crop_sf=stations))
 
+ccp <- system.time(outp <- cordex_grid_cell_value_from_points(nc,crop_sf=stations,type="point"))
 
 
 

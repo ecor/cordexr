@@ -1,7 +1,7 @@
 Package: cordexr
 Type: Package
 Title: Handling CORDEX results
-Version: 0.1.0
+Version: 0.1.1
 Author: Emanuele Cordano
 Maintainer: Emanuele Cordano <emanuele.cordano@gmail.com>
 Description: Functions and tool to handle CORDEX output files

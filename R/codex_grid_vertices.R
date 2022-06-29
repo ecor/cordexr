@@ -53,7 +53,7 @@ NULL
 #' ##ncs[-c(22,24,25,37,40,47,49,52,56,60,62,65,83,86,89,92,104,107,114,116,119,123,127,129,132,154,156,157,169,172,179,181,184,188,192,194,197,219,222,234,237,244,246,249,253,257,259,262)
 #'
 #' }
-cordex_grid_vertices <- function(nc,...,dim_x=c("rlon","x","auto"),dim_y=c("rlat","y","auto"),lon_vertices=c("lon_vertices","bounds_lat","auto"),lat_vertices=c("lat_vertices","bounds_lat","auto"),nvertex=4,crs=4326,return_sf=TRUE,crop_sf=NULL,buffer=0.1) {
+cordex_grid_vertices <- function(nc,...,dim_x=c("rlon","x","auto"),dim_y=c("rlat","y","auto"),lon_vertices=c("lon_vertices","bounds_lon","rlon_bnds","vertices_longitude","auto"),lat_vertices=c("lat_vertices","bounds_lat","vertices_latitude","auto"),nvertex=4,crs=4326,return_sf=TRUE,crop_sf=NULL,buffer=0.1) {
 
 
 
@@ -72,21 +72,83 @@ cordex_grid_vertices <- function(nc,...,dim_x=c("rlon","x","auto"),dim_y=c("rlat
   lon_vertices <- which_ncvar_name(ncc,lon_vertices)
   lat_vertices <- which_ncvar_name(ncc,lat_vertices)
 
-  #####
   out <- list()
-  out$lon_vertices <- ncvar_get(ncc,varid=lon_vertices) %>% melt()
+  if ((is.na(lon_vertices)) | (is.na(lat_vertices))) {
 
-  out$lat_vertices <- ncvar_get(ncc,varid=lat_vertices) %>% melt()
+#
+#   #####
+#
+#   out$lon_vertices <- ncvar_get(ncc,varid=lon_vertices)
+#   ###
+#   ###
+#   if (is.null(out$lon_vertices)) out$lon_vertices <- NA
+#
+#
+#
+#   ###
+#   ###
+#   ###
+#   out$lat_vertices <- ncvar_get(ncc,varid=lat_vertices)
+
+#   out88 <<- out
+#   if (is.null(out$lat_vertices)) out$lat_vertices <- NA
+#   if (any(is.na(out$lat_vertices)) | any(is.na(out$lat_vertices))) {
+    ##
+    ccenters <- list()
+    ccenters$lon <- ncvar_get(ncc,varid="lon")
+    ccenters$lat <- ncvar_get(ncc,varid="lat")
+   # lon_centers <- ncvar_get(nc_open(nc),varid="lon")
+    #lat_centers <- ncvar_get(nc_open(nc),varid="lat")
+    vvertices <- list()
+    itv <- c("lon_vertices","lat_vertices")
+    names(itv) <- names(ccenters)
+    for (it in names(ccenters)) {
+      centers <- ccenters[[it]]
+      dcntrs <- dim(centers)
+      lgridv <- array(as.numeric(NA),dcntrs)
+      lgridv[-dcntrs[1],-dcntrs[2]] <- (centers[-dcntrs[1],-dcntrs[2]]+centers[-1,-dcntrs[2]]+centers[-dcntrs[1],-1]+centers[-1,-1])/4
+      lgridv[-dcntrs[1],dcntrs[2]] <- 2*lgridv[-dcntrs[1],dcntrs[2]-1]-lgridv[-dcntrs[1],dcntrs[2]-2]
+      lgridv[dcntrs[1],] <- 2*lgridv[dcntrs[1]-1,]-lgridv[dcntrs[1]-2,]
+      ###
+      lgridv2 <- array(as.numeric(NA),c(4,dim(lgridv)))
+      ###
+      lgridv2[1,,] <- lgridv
+      ###
+      lgridv2[2,-1,] <- lgridv2[1,-dcntrs[1],]
+      lgridv2[2,1,] <- 2*lgridv2[2,2,]-lgridv2[2,3,]
+      ###
+      lgridv2[3,,-1] <- lgridv2[2,,-dcntrs[2]]
+      lgridv2[3,,1] <- 2*lgridv2[3,,2]-lgridv2[3,,3]
+      ###
+      lgridv2[4,-dcntrs[1],] <-  lgridv2[3,-1,]
+      lgridv2[4,dcntrs[1],] <-    2*lgridv2[4,dcntrs[1]-1,]-lgridv2[4,dcntrs[1]-2,]
+      ###
+
+      out[[itv[it]]] <- lgridv2
+
+
+    }
+
+  } else{
+    out$lon_vertices <- ncvar_get(ncc,varid=lon_vertices)
+    out$lat_vertices <- ncvar_get(ncc,varid=lat_vertices)
+
+  }
+
+
+  ##outyy <<- out
+  ##
 
   rlon <- ncvar_get(ncc,varid=dim_x)
   rlat <- ncvar_get(ncc,varid=dim_y)
  ## out$nvertex <- ncvar_get(ncc,varid="vertices")
-
+  out <- map(out,melt)
   names(out$lon_vertices) <- c("vertices",dim_x,dim_y,"lon")
   names(out$lat_vertices) <- c("vertices",dim_x,dim_y,"lat")
   out <- dplyr::full_join(out$lon_vertices,out$lat_vertices)
   out[,dim_y] <- rlat[out[,dim_y]]
   out[,dim_x] <- rlon[out[,dim_x]]
+ ## outxx2 <<- out
   if (return_sf) {
 
     ####out <- out %>% st_as_sf(coords=c("lon","lat"),crs=crs) %>% dplyr::group_by(rlon,rlat) %>% dplyr::mutate(geometry2=st_combine(geometry))
@@ -98,6 +160,7 @@ cordex_grid_vertices <- function(nc,...,dim_x=c("rlon","x","auto"),dim_y=c("rlat
     names(out)[names(out)==dim_x] <- "xr"
     names(out)[names(out)==dim_y] <- "yr"
     out <- out %>% group_by(.data$xr,.data$yr) %>% summarize(geometry=((list(cbind(.data$lon[c(1:nvertex,1)],.data$lat[c(1:nvertex,1)])))))  %>% ungroup()
+    ##out11 <<- out
     out$geometry  <- map(out$geometry,list) %>% map(st_polygon)
     out <- out %>% st_as_sf(crs=crs)
     names(out)[names(out)=="xr"] <- dim_x

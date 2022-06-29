@@ -11,7 +11,6 @@ NULL
 #' @param tz time zone used for time unit. Not specified in the CORDEX netcdf file. Default is \code{GMT}
 #' @param returns_time_posixct logical value. If it is \code{TRUE} (default) , time coordinate will be transformed and returned as POSIxct class (\code{\link{as.POSIXct}}).
 #' @param add_suffix suffix that can be  added to the the name variable. Default is \code{NA} (no suffix added).
-#' @param ncatts_in_df
 #' @param latlon_tolerance,lonlat_tolerance,lon_tolerance,lat_tolerance,time_tolerance tolarances
 #' @param ncatts_in_df logical value. If it is \code{TRUE} netCDF attributes will be added to the returened data frame.
 #' @param ... further arguments.
@@ -92,6 +91,8 @@ cordex_grid_cell_values <- function(nc,rlon,rlat,x=rlon,y=rlat,time=NULL,variabl
 
   print(dim_x)
   print(dim_y)
+  print(range(x))
+  print(range(y))
   ####
   ilon <- which(condlon) %>% range() ## DA CORREGGERE QUI!!!
   ilat <- which(condlat) %>% range()
@@ -105,7 +106,7 @@ cordex_grid_cell_values <- function(nc,rlon,rlat,x=rlon,y=rlat,time=NULL,variabl
     time <- as.numeric(time-start_date,unit="days")
 
   }
-  condlat <- (ncrlon>=(min(rlat,na.rm=TRUE)-time_tolerance) & ncrlon<=(max(rlat,na.rm=TRUE)+time_tolerance))
+ ### condlat <- (ncrlon>=(min(rlat,na.rm=TRUE)-time_tolerance) & ncrlon<=(max(rlat,na.rm=TRUE)+time_tolerance))
 
 
   itime <- which(ncvar_get(ncc,varid="time") %in% time) %>% range()
@@ -136,8 +137,8 @@ cordex_grid_cell_values <- function(nc,rlon,rlat,x=rlon,y=rlat,time=NULL,variabl
 
     out$variable <- variable
   }
-  out$rlon <- out_rlon[out$rlon]
-  out$rlat <- out_rlat[out$rlat]
+  out[,dim_x] <- out_rlon[out[,dim_x]]
+  out[,dim_y] <- out_rlat[out[,dim_y]]
   out$time <- out_time[out$time]
 
   returns_time_posixct <- as.logical(returns_time_posixct)

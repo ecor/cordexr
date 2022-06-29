@@ -11,7 +11,7 @@ NULL
 #'
 #'
 #' @importFrom dplyr full_join summarize ungroup group_by
-#' @importFrom sf st_as_sf st_crop st_polygon
+#' @importFrom sf st_as_sf st_crop st_polygon st_coordinates
 #'
 #' @seealso \url{https://cds.climate.copernicus.eu/cdsapp#!/dataset/projections-cordex-domains-single-levels?tab=overview})
 #' @export
