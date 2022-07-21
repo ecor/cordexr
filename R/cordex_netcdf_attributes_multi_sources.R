@@ -27,7 +27,7 @@ cordex_netcdf_attributes_multi_sources <- function (nc,...){
     if ("realization" %in% names(out2)) out2$realization <- as.character(out2$realization)
     for (i in 2:length(out)) {
 
-      print(i)
+
       nn <- !(names(out2) %in% names(out[[i]]))
       if (length(nn)>0) { out[[i]][,names(out2)[nn]] <- NA}
       nq <- !(names(out[[i]]) %in% names(out2))

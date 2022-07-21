@@ -43,7 +43,7 @@ cordex_netcdf_attributes <- function(nc,variable=NULL,ncatts_in_df=FALSE,
     if (is.null(variable)) variable <- NA
     if (is.na(variable)) variable <- str_split(basename(nc),"_")[[1]][1]
 
-    print(nc)
+
     ncc <- nc_open(nc)
     nc_close_at_end <- FALSE
   }

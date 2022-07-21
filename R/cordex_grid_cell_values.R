@@ -60,7 +60,7 @@ cordex_grid_cell_values <- function(nc,rlon,rlat,x=rlon,y=rlat,time=NULL,variabl
     if (is.null(variable)) variable <- NA
     if (is.na(variable)) variable <- str_split(basename(nc),"_")[[1]][1]
 
-    print(nc)
+
     ncc <- nc_open(nc)
     nc_close_at_end <- FALSE
   }
@@ -89,15 +89,11 @@ cordex_grid_cell_values <- function(nc,rlon,rlat,x=rlon,y=rlat,time=NULL,variabl
 
 
 
-  print(dim_x)
-  print(dim_y)
-  print(range(x))
-  print(range(y))
+
   ####
   ilon <- which(condlon) %>% range() ## DA CORREGGERE QUI!!!
   ilat <- which(condlat) %>% range()
-  print(ilon)
-  print(ilat)
+
   if (is.null(time)) time <- NA
   if (is.na(time))  time <- ncvar_get(ncc,varid="time")
   if (class(time)=="Date") time <- as.POSIXct(time,tz=tz)
